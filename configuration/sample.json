@@ -1,0 +1,156 @@
+[
+    {
+        "tradable": True,
+        "mode": "full",
+        "instrument_token": 10586882,
+        "last_price": 176.65,
+        "last_traded_quantity": 60,
+        "average_traded_price": 242.93,
+        "volume_traded": 41065620,
+        "total_buy_quantity": 10822545,
+        "total_sell_quantity": 824475,
+        "ohlc": {
+            "open": 275.55,
+            "high": 369.95,
+            "low": 158.05,
+            "close": 91.55
+        },
+        "change": 92.95466957946478,
+        "oi": 4209855,
+        "oi_day_high": 4209855,
+        "oi_day_low": 2313630,
+        "depth": {
+            "buy": [
+                {
+                    "quantity": 465,
+                    "price": 176.2,
+                    "orders": 4
+                },
+                {
+                    "quantity": 315,
+                    "price": 176.15,
+                    "orders": 4
+                },
+                {
+                    "quantity": 495,
+                    "price": 176.1,
+                    "orders": 4
+                },
+                {
+                    "quantity": 195,
+                    "price": 176.05,
+                    "orders": 2
+                },
+                {
+                    "quantity": 840,
+                    "price": 176.0,
+                    "orders": 12
+                }
+            ],
+            "sell": [
+                {
+                    "quantity": 540,
+                    "price": 176.65,
+                    "orders": 7
+                },
+                {
+                    "quantity": 150,
+                    "price": 176.7,
+                    "orders": 4
+                },
+                {
+                    "quantity": 300,
+                    "price": 176.75,
+                    "orders": 5
+                },
+                {
+                    "quantity": 540,
+                    "price": 176.8,
+                    "orders": 12
+                },
+                {
+                    "quantity": 615,
+                    "price": 176.85,
+                    "orders": 7
+                }
+            ]
+        }
+    },
+    {
+        "tradable": True,
+        "mode": "full",
+        "instrument_token": 10598146,
+        "last_price": 347.6,
+        "last_traded_quantity": 15,
+        "average_traded_price": 275.75,
+        "volume_traded": 29339010,
+        "total_buy_quantity": 3777315,
+        "total_sell_quantity": 115515,
+        "ohlc": {
+            "open": 253.25,
+            "high": 383.4,
+            "low": 192.35,
+            "close": 605.9
+        },
+        "change": -42.63079716124773,
+        "oi": 1103955,
+        "oi_day_high": 1587540,
+        "oi_day_low": 90540,
+        "depth": {
+            "buy": [
+                {
+                    "quantity": 285,
+                    "price": 347.75,
+                    "orders": 2
+                },
+                {
+                    "quantity": 135,
+                    "price": 347.7,
+                    "orders": 2
+                },
+                {
+                    "quantity": 195,
+                    "price": 347.65,
+                    "orders": 1
+                },
+                {
+                    "quantity": 15,
+                    "price": 347.6,
+                    "orders": 1
+                },
+                {
+                    "quantity": 135,
+                    "price": 347.55,
+                    "orders": 2
+                }
+            ],
+            "sell": [
+                {
+                    "quantity": 15,
+                    "price": 348.3,
+                    "orders": 1
+                },
+                {
+                    "quantity": 135,
+                    "price": 348.35,
+                    "orders": 2
+                },
+                {
+                    "quantity": 225,
+                    "price": 348.4,
+                    "orders": 2
+                },
+                {
+                    "quantity": 405,
+                    "price": 348.45,
+                    "orders": 6
+                },
+                {
+                    "quantity": 510,
+                    "price": 348.5,
+                    "orders": 4
+                }
+            ]
+        }
+    }
+]
