@@ -24,15 +24,50 @@ INDEX = os.getenv('INDEX')
 TODAY_DATE = os.getenv('TODAY_DATE')
 EXPIRY_DATE = os.getenv('EXPIRY_DATE')
 
-CE_INSTRUMENT = int(os.getenv('CE_INSTRUMENT'))
-PE_INSTRUMENT = int(os.getenv('PE_INSTRUMENT'))
-INSTRUMENTS = [CE_INSTRUMENT, PE_INSTRUMENT]
+CE_INSTRUMENT = os.getenv('CE_INSTRUMENT')
+PE_INSTRUMENT = os.getenv('PE_INSTRUMENT')
+INDEX_INSTRUMENT = os.getenv('INDEX_INSTRUMENT')
+
+SELECTED_CE_INSTRUMENTS = os.getenv('SELECTED_CE_INSTRUMENTS')
+SELECTED_PE_INSTRUMENTS = os.getenv('SELECTED_PE_INSTRUMENTS')
+
+AUTO_SELECT_RANGE_MIN_PRICE=int(os.getenv('AUTO_SELECT_RANGE_MIN_PRICE'))
+AUTO_SELECT_RANGE_AVG_PRICE=int(os.getenv('AUTO_SELECT_RANGE_AVG_PRICE'))
+AUTO_SELECT_RANGE_MAX_PRICE=int(os.getenv('AUTO_SELECT_RANGE_MAX_PRICE'))
 
 CAPITAL = int(os.getenv('CAPITAL'))
 STOP_LOSS_PERCENTAGE = float(os.getenv('STOP_LOSS_PERCENTAGE'))
 QUANTITY_PER_LOT_SIZE = int(os.getenv('QUANTITY_PER_LOT_SIZE'))
 MAXIMUM_QUANTITY_PER_TRADE_SIZE = int(os.getenv('MAXIMUM_QUANTITY_PER_TRADE_SIZE'))
 MINIMUM_QUANTITY_PER_TRADE_SIZE = int(os.getenv('MINIMUM_QUANTITY_PER_TRADE_SIZE'))
+
+isValidCE = False
+isValidPE = False
+isValidINDEX = False
+isValidSELECTEDCEINSTRUMENTS = False
+isValidSELECTEDPEINSTRUMENTS = False
+
+if CE_INSTRUMENT != '':
+    CE_INSTRUMENT = int(CE_INSTRUMENT)
+    isValidCE = True
+
+if PE_INSTRUMENT != '':
+    PE_INSTRUMENT = int(PE_INSTRUMENT)
+    isValidPE = True
+
+if INDEX_INSTRUMENT != '':
+    INDEX_INSTRUMENT = int(INDEX_INSTRUMENT)
+    isValidINDEX = True
+
+if SELECTED_CE_INSTRUMENTS != '':
+    SELECTED_CE_INSTRUMENTS = [int(instrument) for instrument in SELECTED_CE_INSTRUMENTS.split(',')]
+    isValidSELECTEDCEINSTRUMENTS = True
+
+if SELECTED_PE_INSTRUMENTS != '':
+    SELECTED_PE_INSTRUMENTS = [int(instrument) for instrument in SELECTED_PE_INSTRUMENTS.split(',')]
+    isValidSELECTEDPEINSTRUMENTS = True
+
+INSTRUMENTS = [INDEX_INSTRUMENT] + SELECTED_CE_INSTRUMENTS + SELECTED_PE_INSTRUMENTS
 
 # Setup the Kite API client
 kite = KiteConnect(api_key=API_KEY)
@@ -45,6 +80,7 @@ currentTransaction = None
 currentInstrumentType = 'CE'
 ceLastPrice = None
 peLastPrice = None
+indexPrice = None
 isPreStart = True
 
 # Read access token from file
@@ -129,6 +165,7 @@ def buy_transaction():
           "highest_price": lastPrice,
           "lowest_price": lastPrice,
           "sell_price": 0,
+        #   "price_movement": [lastPrice],
           "profit": 0,
           "active": True,
           "pre_start": isPreStart,
@@ -180,6 +217,7 @@ def update_or_sell_transaction():
     buyPrice = currentTransaction['buy_price']
     quantity = currentTransaction['quantity']
     capital = currentTransaction['capital']
+    # currentTransaction["price_movement"] = currentTransaction["price_movement"].append(lastPrice)
     profit = round(float((lastPrice - buyPrice) * quantity), 2)
     currentTransaction['profit'] = profit
     currentTransaction["updated_datetime"] = now.strftime("%d/%m/%Y %H:%M:%S")
@@ -205,24 +243,63 @@ def on_symbol_price_change():
         update_or_sell_transaction()
     write_instruments_data()
 
+# Pick ce and pe from selected instruments
+def pick_selected_instruments(ticks):
+    global CE_INSTRUMENT, PE_INSTRUMENT, isValidCE, isValidPE
+    for row in ticks:
+        instrumentLastPrice = row['last_price']
+        instrumentToken = row['instrument_token']
+        if instrumentToken in SELECTED_CE_INSTRUMENTS and not isValidCE:
+            if instrumentLastPrice > AUTO_SELECT_RANGE_MIN_PRICE and instrumentLastPrice <= AUTO_SELECT_RANGE_AVG_PRICE:
+                CE_INSTRUMENT = instrumentToken
+                isValidCE = True
+        elif instrumentToken in SELECTED_PE_INSTRUMENTS and not isValidPE:
+            if instrumentLastPrice > AUTO_SELECT_RANGE_MIN_PRICE and instrumentLastPrice <= AUTO_SELECT_RANGE_AVG_PRICE:
+                PE_INSTRUMENT = instrumentToken
+                isValidPE = True
+
+    for row in ticks:
+        instrumentLastPrice = row['last_price']
+        instrumentToken = row['instrument_token']
+        if instrumentToken in SELECTED_CE_INSTRUMENTS and not isValidCE:
+            if instrumentLastPrice > AUTO_SELECT_RANGE_AVG_PRICE and instrumentLastPrice <= AUTO_SELECT_RANGE_MAX_PRICE:
+                CE_INSTRUMENT = instrumentToken
+                isValidCE = True
+        elif instrumentToken in SELECTED_PE_INSTRUMENTS and not isValidPE:
+            if instrumentLastPrice > AUTO_SELECT_RANGE_AVG_PRICE and instrumentLastPrice <= AUTO_SELECT_RANGE_MAX_PRICE:
+                PE_INSTRUMENT = instrumentToken
+                isValidPE = True   
+    print('SELECTED CE : '+ str(CE_INSTRUMENT))
+    print('SELECTED PE : '+ str(PE_INSTRUMENT))
+
 def on_ticks(ws, ticks):
     # Callback to receive ticks.
     if is_development():
-        print(ticks)
+        print('-----')
     global ceLastPrice
     global peLastPrice
-    for row in ticks:
-        if row['instrument_token'] == CE_INSTRUMENT:
-            ceLastPrice = row['last_price']
-        else:
-            peLastPrice = row['last_price'] 
-    ceDataArray.append(ceLastPrice)
-    peDataArray.append(peLastPrice)
-    on_symbol_price_change()
+    global indexPrice
+
+    if isValidCE and isValidPE:
+        for row in ticks:
+            if row['instrument_token'] == CE_INSTRUMENT:
+                ceLastPrice = row['last_price']
+            elif row['instrument_token'] == PE_INSTRUMENT:
+                peLastPrice = row['last_price']
+            elif row['instrument_token'] == INDEX_INSTRUMENT:
+                indexPrice = row['last_price']
+        ceDataArray.append(ceLastPrice)
+        peDataArray.append(peLastPrice)
+        on_symbol_price_change()
+    else:
+        pick_selected_instruments(ticks)
 
 def on_connect(ws, response):
     # Callback on successful connect.
     # Subscribe to a list of instrument_tokens 
+    global INSTRUMENTS
+    if isValidCE and isValidPE and isValidINDEX:
+        INSTRUMENTS = [INDEX_INSTRUMENT, CE_INSTRUMENT, PE_INSTRUMENT]
     ws.subscribe(INSTRUMENTS)
     # Set instrument to tick in `full` mode.
     ws.set_mode(ws.MODE_FULL, INSTRUMENTS)
